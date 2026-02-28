@@ -1,0 +1,40 @@
+# Vision2Voice — Default Configuration
+# Loaded at runtime by the application. Override by setting environment variables
+# or by passing a custom config path as CLI argument.
+
+app:
+  name: "Vision2Voice AI"
+  version: "1.0.0"
+  debug: false
+
+server:
+  host: "0.0.0.0"
+  port: 8501
+
+paths:
+  models_dir: "models"
+  outputs_dir: "outputs"
+  data_dir: "data"
+
+model:
+  # LSTM caption model
+  lstm_weights: "modelConcat_1_89.h5"
+  tokenizer: "caption_train_tokenizer.pkl"
+  max_caption_length: 33
+  vocab_size: 7506
+  beam_width: 10
+
+  # YOLO object detector
+  yolo_variant: "yolov8n.pt"   # nano (fastest); options: yolov8s, yolov8m, yolov8l
+
+  # VGG16 feature extraction layer
+  vgg16_layer: "fc2"            # 4096-dim feature vector
+
+tts:
+  language: "en"
+  slow_speech: false
+  output_filename: "output_speech.mp3"
+
+logging:
+  level: "INFO"   # DEBUG | INFO | WARNING | ERROR
+  format: "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
