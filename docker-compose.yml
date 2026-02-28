@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  vision2voice:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+    image: vision2voice:latest
+    container_name: vision2voice-app
+    ports:
+      - "8501:8501"
+    volumes:
+      # Mount local model weights (not committed to git)
+      - ./models:/app/models:ro
+      # Persist generated audio/outputs
+      - ./outputs:/app/outputs
+    environment:
+      - PYTHONPATH=/app/src
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
