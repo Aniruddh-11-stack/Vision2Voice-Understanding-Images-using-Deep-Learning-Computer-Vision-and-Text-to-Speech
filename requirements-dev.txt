@@ -1,0 +1,22 @@
+# Vision2Voice — Development & Testing Dependencies
+# Install with: pip install -r requirements-dev.txt
+
+-r requirements.txt
+
+# Testing
+pytest>=7.4
+pytest-cov>=4.1
+pytest-mock>=3.12
+
+# Linting & formatting
+flake8>=6.1
+flake8-bugbear>=23.0
+flake8-comprehensions>=3.14
+black>=23.0
+isort>=5.12
+
+# Type checking
+mypy>=1.5
+
+# Pre-commit hooks
+pre-commit>=3.5
