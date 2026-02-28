@@ -1,6 +1,6 @@
-# Vision2Voice ðï¸ð
+# Vision2Voice Ã°ÂÂÂÃ¯Â¸ÂÃ°ÂÂÂ
 
-> AI-powered image understanding pipeline that bridges visual perception and spoken language â combining deep CNNs, sequence models, object detection, and text-to-speech into a single cohesive system.
+> AI-powered image understanding pipeline that bridges visual perception and spoken language Ã¢ÂÂ combining deep CNNs, sequence models, object detection, and text-to-speech into a single cohesive system.
 
 [![CI](https://github.com/Aniruddh-11-stack/Vision2Voice-Understanding-Images-using-Deep-Learning-Computer-Vision-and-Text-to-Speech/actions/workflows/ci.yml/badge.svg)](https://github.com/Aniruddh-11-stack/Vision2Voice-Understanding-Images-using-Deep-Learning-Computer-Vision-and-Text-to-Speech/actions/workflows/ci.yml)
 [![Docker](https://github.com/Aniruddh-11-stack/Vision2Voice-Understanding-Images-using-Deep-Learning-Computer-Vision-and-Text-to-Speech/actions/workflows/docker-build.yml/badge.svg)](https://github.com/Aniruddh-11-stack/Vision2Voice-Understanding-Images-using-Deep-Learning-Computer-Vision-and-Text-to-Speech/actions/workflows/docker-build.yml)
@@ -8,6 +8,15 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ![Vision2Voice App Demo](docs/screenshots/app_demo.png)
+
+## 🏗️ Model Architecture
+
+The model uses a dual-input architecture combining:
+- **Image encoder**: VGG16 (4096-dim features) → Dense(256)
+- **Language model**: Embedding + LSTM (256-dim)
+- **Fusion**: Concatenate → Dense(256) → Dense(vocab_size, softmax)
+
+![Model Architecture](docs/model_architecture.png)
 
 ---
 
@@ -34,7 +43,7 @@
 4. **Aggregates** all captions into a rich, object-aware scene description
 5. **Speaks** the result aloud via **Google Text-to-Speech (gTTS)**
 
-The result is a narration that captures individual entities and their relationships â far richer than a single global description.
+The result is a narration that captures individual entities and their relationships Ã¢ÂÂ far richer than a single global description.
 
 ---
 
@@ -42,32 +51,32 @@ The result is a narration that captures individual entities and their relationsh
 
 ```
 Input Image
-    â
-    â¼
-âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-â               Vision2Voice Pipeline                  â
-â                                                      â
-â  ââââââââââââ    ââââââââââââââââââââ               â
-â  â  VGG16   âââââ¶â  LSTM + Beam     ââââ¶ Base Captionâ
-â  â  (fc2)   â    â  Search          â               â
-â  ââââââââââââ    ââââââââââââââââââââ               â
-â       â                                              â
-â  ââââââââââââ    ââââââââââââââââââââ               â
-â  â YOLOv8  âââââ¶â  Crop N Objects  â               â
-â  â Detect  â    ââââââââââ¬ââââââââââ               â
-â  ââââââââââââ            â                          â
-â                    âââââââ¼âââââââ                   â
-â                    â VGG16+LSTM â Ã N captions       â
-â                    âââââââ¬âââââââ                   â
-â                          â                          â
-â              âââââââââââââ¼âââââââââââââ             â
-â              â  Caption Aggregation   â             â
-â              âââââââââââââ¬âââââââââââââ             â
-ââââââââââââââââââââââââââââ¼âââââââââââââââââââââââââââ
-                           â
-                    ââââââââ¼âââââââ
-                    â    gTTS     ââââ¶ ð MP3 Audio
-                    âââââââââââââââ
+    Ã¢ÂÂ
+    Ã¢ÂÂ¼
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+Ã¢ÂÂ               Vision2Voice Pipeline                  Ã¢ÂÂ
+Ã¢ÂÂ                                                      Ã¢ÂÂ
+Ã¢ÂÂ  Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ    Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ               Ã¢ÂÂ
+Ã¢ÂÂ  Ã¢ÂÂ  VGG16   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ¶Ã¢ÂÂ  LSTM + Beam     Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ¶ Base CaptionÃ¢ÂÂ
+Ã¢ÂÂ  Ã¢ÂÂ  (fc2)   Ã¢ÂÂ    Ã¢ÂÂ  Search          Ã¢ÂÂ               Ã¢ÂÂ
+Ã¢ÂÂ  Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ    Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ               Ã¢ÂÂ
+Ã¢ÂÂ       Ã¢ÂÂ                                              Ã¢ÂÂ
+Ã¢ÂÂ  Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ    Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ               Ã¢ÂÂ
+Ã¢ÂÂ  Ã¢ÂÂ YOLOv8  Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ¶Ã¢ÂÂ  Crop N Objects  Ã¢ÂÂ               Ã¢ÂÂ
+Ã¢ÂÂ  Ã¢ÂÂ Detect  Ã¢ÂÂ    Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ¬Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ               Ã¢ÂÂ
+Ã¢ÂÂ  Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ            Ã¢ÂÂ                          Ã¢ÂÂ
+Ã¢ÂÂ                    Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ¼Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ                   Ã¢ÂÂ
+Ã¢ÂÂ                    Ã¢ÂÂ VGG16+LSTM Ã¢ÂÂ ÃÂ N captions       Ã¢ÂÂ
+Ã¢ÂÂ                    Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ¬Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ                   Ã¢ÂÂ
+Ã¢ÂÂ                          Ã¢ÂÂ                          Ã¢ÂÂ
+Ã¢ÂÂ              Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ¼Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ             Ã¢ÂÂ
+Ã¢ÂÂ              Ã¢ÂÂ  Caption Aggregation   Ã¢ÂÂ             Ã¢ÂÂ
+Ã¢ÂÂ              Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ¬Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ             Ã¢ÂÂ
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ¼Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+                           Ã¢ÂÂ
+                    Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ¼Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+                    Ã¢ÂÂ    gTTS     Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ¶ Ã°ÂÂÂ MP3 Audio
+                    Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 ```
 
 | Component | Technology | Purpose |
@@ -84,67 +93,67 @@ Input Image
 
 ```
 vision2voice/
-âââ .github/
-â   âââ workflows/
-â       âââ ci.yml               # Lint + test on every push/PR
-â       âââ docker-build.yml     # Build & push Docker image on release
-â
-âââ src/
-â   âââ vision2voice/            # Core Python package
-â       âââ __init__.py
-â       âââ predictor.py         # Vision2VoicePredictor (VGG16 + LSTM + YOLO)
-â       âââ audio.py             # TextToSpeechEngine (gTTS wrapper)
-â       âââ utils/
-â           âââ __init__.py
-â           âââ image_utils.py   # Image loading & pre-processing helpers
-â
-âââ app/
-â   âââ streamlit_app.py         # Streamlit dashboard entry point
-â
-âââ notebooks/
-â   âââ 01_model_training.ipynb  # Original research & training notebook
-â
-âââ models/                      # â ï¸ Place pre-trained weights here (not committed)
-â   âââ .gitkeep
-â
-âââ data/
-â   âââ README.md                # Dataset download instructions
-â   âââ samples/                 # Sample images for quick testing
-â
-âââ outputs/                     # Generated audio & temp files (git-ignored)
-â   âââ .gitkeep
-â
-âââ tests/
-â   âââ conftest.py              # Shared pytest fixtures
-â   âââ unit/                    # Fast, dependency-free unit tests
-â   â   âââ test_image_utils.py
-â   â   âââ test_audio.py
-â   â   âââ test_predictor.py
-â   âââ integration/             # Full-pipeline tests (requires model weights)
-â       âââ test_pipeline.py
-â
-âââ docs/
-â   âââ architecture.md          # Detailed system design
-â   âââ api_reference.md         # Module-level API docs
-â   âââ dataset.md               # Dataset details & pre-processing
-â
-âââ configs/
-â   âââ default.yaml             # Runtime configuration
-â
-âââ scripts/
-â   âââ run.sh                   # Linux/macOS launcher
-â   âââ run.bat                  # Windows launcher
-â
-âââ .flake8                      # Linter config
-âââ .gitignore
-âââ .pre-commit-config.yaml      # Pre-commit hooks
-âââ Dockerfile                   # Multi-stage Docker build
-âââ docker-compose.yml
-âââ Makefile                     # Developer shortcuts
-âââ pyproject.toml               # Package metadata & tool config
-âââ requirements.txt             # Runtime dependencies
-âââ requirements-dev.txt         # Dev/test dependencies
-âââ README.md
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ .github/
+Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ workflows/
+Ã¢ÂÂ       Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ ci.yml               # Lint + test on every push/PR
+Ã¢ÂÂ       Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ docker-build.yml     # Build & push Docker image on release
+Ã¢ÂÂ
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ src/
+Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ vision2voice/            # Core Python package
+Ã¢ÂÂ       Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ __init__.py
+Ã¢ÂÂ       Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ predictor.py         # Vision2VoicePredictor (VGG16 + LSTM + YOLO)
+Ã¢ÂÂ       Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ audio.py             # TextToSpeechEngine (gTTS wrapper)
+Ã¢ÂÂ       Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ utils/
+Ã¢ÂÂ           Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ __init__.py
+Ã¢ÂÂ           Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ image_utils.py   # Image loading & pre-processing helpers
+Ã¢ÂÂ
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ app/
+Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ streamlit_app.py         # Streamlit dashboard entry point
+Ã¢ÂÂ
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ notebooks/
+Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ 01_model_training.ipynb  # Original research & training notebook
+Ã¢ÂÂ
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ models/                      # Ã¢ÂÂ Ã¯Â¸Â Place pre-trained weights here (not committed)
+Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ .gitkeep
+Ã¢ÂÂ
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ data/
+Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ README.md                # Dataset download instructions
+Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ samples/                 # Sample images for quick testing
+Ã¢ÂÂ
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ outputs/                     # Generated audio & temp files (git-ignored)
+Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ .gitkeep
+Ã¢ÂÂ
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ tests/
+Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ conftest.py              # Shared pytest fixtures
+Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ unit/                    # Fast, dependency-free unit tests
+Ã¢ÂÂ   Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ test_image_utils.py
+Ã¢ÂÂ   Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ test_audio.py
+Ã¢ÂÂ   Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ test_predictor.py
+Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ integration/             # Full-pipeline tests (requires model weights)
+Ã¢ÂÂ       Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ test_pipeline.py
+Ã¢ÂÂ
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ docs/
+Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ architecture.md          # Detailed system design
+Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ api_reference.md         # Module-level API docs
+Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ dataset.md               # Dataset details & pre-processing
+Ã¢ÂÂ
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ configs/
+Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ default.yaml             # Runtime configuration
+Ã¢ÂÂ
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ scripts/
+Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ run.sh                   # Linux/macOS launcher
+Ã¢ÂÂ   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ run.bat                  # Windows launcher
+Ã¢ÂÂ
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ .flake8                      # Linter config
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ .gitignore
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ .pre-commit-config.yaml      # Pre-commit hooks
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Dockerfile                   # Multi-stage Docker build
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ docker-compose.yml
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Makefile                     # Developer shortcuts
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ pyproject.toml               # Package metadata & tool config
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ requirements.txt             # Runtime dependencies
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ requirements-dev.txt         # Dev/test dependencies
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ README.md
 ```
 
 ---
@@ -152,7 +161,7 @@ vision2voice/
 ## Quickstart
 
 ### Prerequisites
-- Python 3.9 â 3.11
+- Python 3.9 Ã¢ÂÂ 3.11
 - Git
 - (Optional) CUDA-capable GPU for faster inference
 
@@ -180,8 +189,8 @@ Download the pre-trained weights (see [Dataset & Model Weights](#dataset--model-
 
 ```
 models/
-âââ modelConcat_1_89.h5
-âââ caption_train_tokenizer.pkl
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ modelConcat_1_89.h5
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ caption_train_tokenizer.pkl
 ```
 
 ### 4. Run the app
@@ -311,4 +320,4 @@ See [`docs/api_reference.md`](docs/api_reference.md) for the full API.
 
 ## License
 
-MIT Â© [Aniruddh Kulkarni](https://github.com/Aniruddh-11-stack)
+MIT ÃÂ© [Aniruddh Kulkarni](https://github.com/Aniruddh-11-stack)
