@@ -1,11 +1,13 @@
-# Vision2Voice 👁️🔊
+# Vision2Voice ðï¸ð
 
-> AI-powered image understanding pipeline that bridges visual perception and spoken language — combining deep CNNs, sequence models, object detection, and text-to-speech into a single cohesive system.
+> AI-powered image understanding pipeline that bridges visual perception and spoken language â combining deep CNNs, sequence models, object detection, and text-to-speech into a single cohesive system.
 
 [![CI](https://github.com/Aniruddh-11-stack/Vision2Voice-Understanding-Images-using-Deep-Learning-Computer-Vision-and-Text-to-Speech/actions/workflows/ci.yml/badge.svg)](https://github.com/Aniruddh-11-stack/Vision2Voice-Understanding-Images-using-Deep-Learning-Computer-Vision-and-Text-to-Speech/actions/workflows/ci.yml)
 [![Docker](https://github.com/Aniruddh-11-stack/Vision2Voice-Understanding-Images-using-Deep-Learning-Computer-Vision-and-Text-to-Speech/actions/workflows/docker-build.yml/badge.svg)](https://github.com/Aniruddh-11-stack/Vision2Voice-Understanding-Images-using-Deep-Learning-Computer-Vision-and-Text-to-Speech/actions/workflows/docker-build.yml)
 [![Python](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+![Vision2Voice App Demo](docs/screenshots/app_demo.png)
 
 ---
 
@@ -32,7 +34,7 @@
 4. **Aggregates** all captions into a rich, object-aware scene description
 5. **Speaks** the result aloud via **Google Text-to-Speech (gTTS)**
 
-The result is a narration that captures individual entities and their relationships — far richer than a single global description.
+The result is a narration that captures individual entities and their relationships â far richer than a single global description.
 
 ---
 
@@ -40,32 +42,32 @@ The result is a narration that captures individual entities and their relationsh
 
 ```
 Input Image
-    │
-    ▼
-┌─────────────────────────────────────────────────────┐
-│               Vision2Voice Pipeline                  │
-│                                                      │
-│  ┌──────────┐    ┌──────────────────┐               │
-│  │  VGG16   │───▶│  LSTM + Beam     │──▶ Base Caption│
-│  │  (fc2)   │    │  Search          │               │
-│  └──────────┘    └──────────────────┘               │
-│       │                                              │
-│  ┌──────────┐    ┌──────────────────┐               │
-│  │ YOLOv8  │───▶│  Crop N Objects  │               │
-│  │ Detect  │    └────────┬─────────┘               │
-│  └──────────┘            │                          │
-│                    ┌─────▼──────┐                   │
-│                    │ VGG16+LSTM │ × N captions       │
-│                    └─────┬──────┘                   │
-│                          │                          │
-│              ┌───────────▼────────────┐             │
-│              │  Caption Aggregation   │             │
-│              └───────────┬────────────┘             │
-└──────────────────────────┼──────────────────────────┘
-                           │
-                    ┌──────▼──────┐
-                    │    gTTS     │──▶ 🔊 MP3 Audio
-                    └─────────────┘
+    â
+    â¼
+âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+â               Vision2Voice Pipeline                  â
+â                                                      â
+â  ââââââââââââ    ââââââââââââââââââââ               â
+â  â  VGG16   âââââ¶â  LSTM + Beam     ââââ¶ Base Captionâ
+â  â  (fc2)   â    â  Search          â               â
+â  ââââââââââââ    ââââââââââââââââââââ               â
+â       â                                              â
+â  ââââââââââââ    ââââââââââââââââââââ               â
+â  â YOLOv8  âââââ¶â  Crop N Objects  â               â
+â  â Detect  â    ââââââââââ¬ââââââââââ               â
+â  ââââââââââââ            â                          â
+â                    âââââââ¼âââââââ                   â
+â                    â VGG16+LSTM â Ã N captions       â
+â                    âââââââ¬âââââââ                   â
+â                          â                          â
+â              âââââââââââââ¼âââââââââââââ             â
+â              â  Caption Aggregation   â             â
+â              âââââââââââââ¬âââââââââââââ             â
+ââââââââââââââââââââââââââââ¼âââââââââââââââââââââââââââ
+                           â
+                    ââââââââ¼âââââââ
+                    â    gTTS     ââââ¶ ð MP3 Audio
+                    âââââââââââââââ
 ```
 
 | Component | Technology | Purpose |
@@ -82,67 +84,67 @@ Input Image
 
 ```
 vision2voice/
-├── .github/
-│   └── workflows/
-│       ├── ci.yml               # Lint + test on every push/PR
-│       └── docker-build.yml     # Build & push Docker image on release
-│
-├── src/
-│   └── vision2voice/            # Core Python package
-│       ├── __init__.py
-│       ├── predictor.py         # Vision2VoicePredictor (VGG16 + LSTM + YOLO)
-│       ├── audio.py             # TextToSpeechEngine (gTTS wrapper)
-│       └── utils/
-│           ├── __init__.py
-│           └── image_utils.py   # Image loading & pre-processing helpers
-│
-├── app/
-│   └── streamlit_app.py         # Streamlit dashboard entry point
-│
-├── notebooks/
-│   └── 01_model_training.ipynb  # Original research & training notebook
-│
-├── models/                      # ⚠️ Place pre-trained weights here (not committed)
-│   └── .gitkeep
-│
-├── data/
-│   ├── README.md                # Dataset download instructions
-│   └── samples/                 # Sample images for quick testing
-│
-├── outputs/                     # Generated audio & temp files (git-ignored)
-│   └── .gitkeep
-│
-├── tests/
-│   ├── conftest.py              # Shared pytest fixtures
-│   ├── unit/                    # Fast, dependency-free unit tests
-│   │   ├── test_image_utils.py
-│   │   ├── test_audio.py
-│   │   └── test_predictor.py
-│   └── integration/             # Full-pipeline tests (requires model weights)
-│       └── test_pipeline.py
-│
-├── docs/
-│   ├── architecture.md          # Detailed system design
-│   ├── api_reference.md         # Module-level API docs
-│   └── dataset.md               # Dataset details & pre-processing
-│
-├── configs/
-│   └── default.yaml             # Runtime configuration
-│
-├── scripts/
-│   ├── run.sh                   # Linux/macOS launcher
-│   └── run.bat                  # Windows launcher
-│
-├── .flake8                      # Linter config
-├── .gitignore
-├── .pre-commit-config.yaml      # Pre-commit hooks
-├── Dockerfile                   # Multi-stage Docker build
-├── docker-compose.yml
-├── Makefile                     # Developer shortcuts
-├── pyproject.toml               # Package metadata & tool config
-├── requirements.txt             # Runtime dependencies
-├── requirements-dev.txt         # Dev/test dependencies
-└── README.md
+âââ .github/
+â   âââ workflows/
+â       âââ ci.yml               # Lint + test on every push/PR
+â       âââ docker-build.yml     # Build & push Docker image on release
+â
+âââ src/
+â   âââ vision2voice/            # Core Python package
+â       âââ __init__.py
+â       âââ predictor.py         # Vision2VoicePredictor (VGG16 + LSTM + YOLO)
+â       âââ audio.py             # TextToSpeechEngine (gTTS wrapper)
+â       âââ utils/
+â           âââ __init__.py
+â           âââ image_utils.py   # Image loading & pre-processing helpers
+â
+âââ app/
+â   âââ streamlit_app.py         # Streamlit dashboard entry point
+â
+âââ notebooks/
+â   âââ 01_model_training.ipynb  # Original research & training notebook
+â
+âââ models/                      # â ï¸ Place pre-trained weights here (not committed)
+â   âââ .gitkeep
+â
+âââ data/
+â   âââ README.md                # Dataset download instructions
+â   âââ samples/                 # Sample images for quick testing
+â
+âââ outputs/                     # Generated audio & temp files (git-ignored)
+â   âââ .gitkeep
+â
+âââ tests/
+â   âââ conftest.py              # Shared pytest fixtures
+â   âââ unit/                    # Fast, dependency-free unit tests
+â   â   âââ test_image_utils.py
+â   â   âââ test_audio.py
+â   â   âââ test_predictor.py
+â   âââ integration/             # Full-pipeline tests (requires model weights)
+â       âââ test_pipeline.py
+â
+âââ docs/
+â   âââ architecture.md          # Detailed system design
+â   âââ api_reference.md         # Module-level API docs
+â   âââ dataset.md               # Dataset details & pre-processing
+â
+âââ configs/
+â   âââ default.yaml             # Runtime configuration
+â
+âââ scripts/
+â   âââ run.sh                   # Linux/macOS launcher
+â   âââ run.bat                  # Windows launcher
+â
+âââ .flake8                      # Linter config
+âââ .gitignore
+âââ .pre-commit-config.yaml      # Pre-commit hooks
+âââ Dockerfile                   # Multi-stage Docker build
+âââ docker-compose.yml
+âââ Makefile                     # Developer shortcuts
+âââ pyproject.toml               # Package metadata & tool config
+âââ requirements.txt             # Runtime dependencies
+âââ requirements-dev.txt         # Dev/test dependencies
+âââ README.md
 ```
 
 ---
@@ -150,7 +152,7 @@ vision2voice/
 ## Quickstart
 
 ### Prerequisites
-- Python 3.9 – 3.11
+- Python 3.9 â 3.11
 - Git
 - (Optional) CUDA-capable GPU for faster inference
 
@@ -178,8 +180,8 @@ Download the pre-trained weights (see [Dataset & Model Weights](#dataset--model-
 
 ```
 models/
-├── modelConcat_1_89.h5
-└── caption_train_tokenizer.pkl
+âââ modelConcat_1_89.h5
+âââ caption_train_tokenizer.pkl
 ```
 
 ### 4. Run the app
@@ -309,4 +311,4 @@ See [`docs/api_reference.md`](docs/api_reference.md) for the full API.
 
 ## License
 
-MIT © [Aniruddh Kulkarni](https://github.com/Aniruddh-11-stack)
+MIT Â© [Aniruddh Kulkarni](https://github.com/Aniruddh-11-stack)
