@@ -1,22 +1,3 @@
-# Vision2Voice — Development & Testing Dependencies
-# Install with: pip install -r requirements-dev.txt
-
--r requirements.txt
-
-# Testing
-pytest>=7.4
-pytest-cov>=4.1
-pytest-mock>=3.12
-
-# Linting & formatting
-flake8>=6.1
-flake8-bugbear>=23.0
-flake8-comprehensions>=3.14
-black>=23.0
-isort>=5.12
-
-# Type checking
-mypy>=1.5
-
-# Pre-commit hooks
-pre-commit>=3.5
+version https://git-lfs.github.com/spec/v1
+oid sha256:bc678a5d675e86d79e2b815959b051f7979ee4981c3c234f0cb247d966184d4b
+size 356
