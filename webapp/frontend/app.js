@@ -15,11 +15,12 @@
 
   /* ---------- health ---------- */
   fetch(`${API}/api/health`).then((r) => r.json()).then((d) => {
-    $("status").classList.add("ok"); $("statusText").textContent = `Models ready · ${d.device}`;
+    if (d.status === "ok") { $("status").classList.add("ok"); $("statusText").textContent = "VGG16 + LSTM ready"; }
+    else { $("status").classList.add("bad"); $("statusText").textContent = d.status === "loading" ? "Loading models…" : "Models failed to load"; }
   }).catch(() => { $("status").classList.add("bad"); $("statusText").textContent = "Server offline"; });
 
   /* ---------- views ---------- */
-  const VIEW_TEXT = { describe: ["Describe and speak", "What I see"], read: ["Read text aloud", "Text in this image"], live: ["Start live narration", "Live narration"] };
+  const VIEW_TEXT = { describe: ["Describe and speak", "What I see"], live: ["Start live narration", "Live narration"] };
   function setView(v) {
     if (S.view === "live" && v !== "live") stopLive();
     S.view = v;
@@ -43,7 +44,6 @@
     img.src = url; img.hidden = false;
     $("empty").hidden = true; $("stageBar").hidden = false; $("overlay").innerHTML = "";
     $("goBtn").disabled = S.view === "history";
-    $("qaList").innerHTML = "";
   }
   $("chooseBtn").onclick = $("replaceBtn").onclick = (e) => { e.stopPropagation(); $("file").click(); };
   $("file").onchange = (e) => { const f = e.target.files[0]; if (f) setImage(f); e.target.value = ""; };
@@ -87,15 +87,18 @@
     Object.assign($("overlay").style, { left: `${(st.width - w) / 2}px`, top: `${(st.height - h) / 2}px`, width: `${w}px`, height: `${h}px` });
   }
   window.addEventListener("resize", layoutOverlay);
-  function drawBoxes(dets = [], ocr = []) {
+  function drawBoxes(dets = []) {
     const ov = $("overlay"); ov.innerHTML = "";
+    const placed = [];
     const add = ([x1, y1, x2, y2], label, cls) => {
       const d = document.createElement("div"); d.className = `box ${cls}${y1 < 0.08 ? " below" : ""}`;
+      const clash = placed.some(([px, py]) => Math.abs(px - x1) < 0.12 && Math.abs(py - y1) < 0.06);
+      if (clash) label = ""; else placed.push([x1, y1]);
       Object.assign(d.style, { left: `${x1 * 100}%`, top: `${y1 * 100}%`, width: `${(x2 - x1) * 100}%`, height: `${(y2 - y1) * 100}%` });
-      const s = document.createElement("span"); s.textContent = label; d.appendChild(s); ov.appendChild(d);
+      if (label) { const s = document.createElement("span"); s.textContent = label; d.appendChild(s); }
+      ov.appendChild(d);
     };
     dets.slice(0, 12).forEach((o) => add(o.box, `${o.label} · ${Math.round(o.conf * 100)}%`, ""));
-    ocr.slice(0, 6).forEach((o) => add(o.box, "text", "text"));
     layoutOverlay();
   }
   $("boxesBtn").onclick = () => { S.boxes = !S.boxes; $("overlay").classList.toggle("hide", !S.boxes); $("boxesBtn").textContent = S.boxes ? "Hide boxes" : "Show boxes"; $("boxesBtn").setAttribute("aria-pressed", S.boxes); };
@@ -114,6 +117,7 @@
     for (let i = 0; i < 56; i++) { s = (s * 9301 + 49297) % 233280; const h = 18 + (s / 233280) * 82; const b = document.createElement("i"); b.style.height = `${h}%`; w.appendChild(b); }
   }
   function setAudio(b64, mime, text) {
+    if (!b64) { toast("Speech isn't available right now. The text is still shown."); return null; }
     const url = URL.createObjectURL(b64Blob(b64, mime));
     audio.src = url; audio.playbackRate = +$("speed").value;
     $("dlBtn").href = url; $("dlBtn").download = `description.${mime.includes("wav") ? "wav" : "mp3"}`;
@@ -137,22 +141,24 @@
   function render(d) {
     S.last = d;
     const cap = $("caption"); cap.classList.remove("placeholder");
-    cap.textContent = S.view === "read" ? (d.text ? `“${d.text}”` : "No readable text found.") : d.caption;
+    cap.textContent = d.caption;
     $("timing").textContent = `${(d.timings_ms.total / 1000).toFixed(1)} s`;
     const ob = $("objects"); ob.innerHTML = "";
     if (d.objects.length) d.objects.forEach((o) => { const c = document.createElement("span"); c.className = "chip"; c.textContent = `${o.count} ${o.count > 1 ? plural(o.label) : o.label}`; ob.appendChild(c); });
     else ob.innerHTML = '<span class="muted">Nothing specific</span>';
-    $("ocrText").innerHTML = ""; if (d.text) $("ocrText").textContent = d.text; else $("ocrText").innerHTML = '<span class="muted">No text</span>';
-    drawBoxes(d.detections, d.ocr);
+    const cu = $("closeups"); cu.innerHTML = "";
+    if (d.closeups && d.closeups.length) d.closeups.forEach((c) => { const li = document.createElement("li"); li.textContent = c; cu.appendChild(li); });
+    else cu.innerHTML = '<li class="muted">No close-ups for this image</li>';
+    drawBoxes(d.detections);
   }
   const plural = (w) => (d => d[w] || (/(s|x|ch|sh)$/.test(w) ? w + "es" : /[^aeiou]y$/.test(w) ? w.slice(0, -1) + "ies" : w + "s"))({ person: "people", bus: "buses", knife: "knives", mouse: "mice" });
 
-  async function analyze(blob = S.blob, mode = S.view === "read" ? "read" : "describe") {
+  async function analyze(blob = S.blob, mode = "describe") {
     if (!blob) return toast("Add an image first.");
     const fd = new FormData(), s = settings();
     fd.append("image", blob, "image.jpg"); fd.append("mode", mode); fd.append("detail", s.detail);
     fd.append("lang", s.lang); fd.append("accent", s.accent);
-    if (mode !== "live") { $("goBtn").disabled = true; busy(true, mode === "read" ? "Reading the text…" : "Looking at your image…"); }
+    if (mode !== "live") { $("goBtn").disabled = true; busy(true, S.detail === "rich" ? "Captioning the image and each object…" : "Captioning the image…"); }
     try {
       const r = await fetch(`${API}/api/analyze`, { method: "POST", body: fd });
       const d = await r.json(); if (!r.ok) throw new Error(d.detail || "Something went wrong.");
@@ -174,7 +180,7 @@
       const d = await analyze(blob, "live"); if (!d) return;
       S.imgSize = [$("video").videoWidth, $("video").videoHeight];
       if (similar(d.caption, S.lastLiveCaption) < 0.6) { S.lastLiveCaption = d.caption; render(d); setAudio(d.audio_base64, d.audio_mime, d.narration); }
-      else drawBoxes(d.detections, []);
+      else drawBoxes(d.detections);
     } finally { S.liveBusy = false; }
   }
   function startLive() {
@@ -187,36 +193,6 @@
   $("goBtn").onclick = () => {
     if (S.view === "live") { if (S.liveTimer) { clearInterval(S.liveTimer); S.liveTimer = null; $("liveBadge").hidden = true; $("goBtn").textContent = VIEW_TEXT.live[0]; } else startLive(); return; }
     runOnce();
-  };
-
-  /* ---------- questions ---------- */
-  $("askForm").onsubmit = async (e) => {
-    e.preventDefault();
-    const q = $("ask").value.trim(); $("askErr").hidden = true;
-    if (!q) { $("askErr").textContent = "Type a question first."; $("askErr").hidden = false; return; }
-    let blob = S.blob; if (S.stream) blob = await grabFrame();
-    if (!blob) { $("askErr").textContent = "Add an image first."; $("askErr").hidden = false; return; }
-    const fd = new FormData(), s = settings();
-    fd.append("image", blob, "image.jpg"); fd.append("question", q); fd.append("lang", s.lang); fd.append("accent", s.accent);
-    const item = document.createElement("div"); item.className = "qa";
-    item.innerHTML = '<p class="q"></p><p class="a"><span class="spinner" style="width:16px;height:16px;display:inline-block"></span></p>';
-    item.querySelector(".q").textContent = `You asked: ${q}`; $("qaList").prepend(item); $("ask").value = "";
-    try {
-      const r = await fetch(`${API}/api/ask`, { method: "POST", body: fd }); const d = await r.json();
-      if (!r.ok) throw new Error(d.detail || "Couldn't answer that.");
-      item.querySelector(".a").textContent = d.answer; setAudio(d.audio_base64, d.audio_mime, d.answer);
-    } catch (err) { item.querySelector(".a").textContent = err.message; }
-  };
-  $("ask").oninput = () => ($("askErr").hidden = true);
-
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) $("micBtn").hidden = true;
-  else $("micBtn").onclick = () => {
-    const rec = new SR(); rec.lang = $("lang").value === "en" ? "en-IN" : $("lang").value; rec.interimResults = false;
-    $("micBtn").classList.add("rec"); rec.start();
-    rec.onresult = (e) => { $("ask").value = e.results[0][0].transcript; $("askForm").requestSubmit(); };
-    rec.onend = () => $("micBtn").classList.remove("rec");
-    rec.onerror = () => toast("Didn't catch that. Try again.");
   };
 
   /* ---------- history ---------- */

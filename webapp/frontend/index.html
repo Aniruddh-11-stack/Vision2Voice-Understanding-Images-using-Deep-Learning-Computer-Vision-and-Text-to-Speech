@@ -20,7 +20,6 @@
   <nav class="tabs" aria-label="Modes">
     <button class="tab active" data-view="describe">Describe</button>
     <button class="tab" data-view="live">Live camera</button>
-    <button class="tab" data-view="read">Read text</button>
     <button class="tab" data-view="history">History</button>
   </nav>
   <span class="status" id="status"><span class="dot"></span><span id="statusText">Connecting…</span></span>
@@ -58,7 +57,7 @@
         <div class="ctl">
           <label for="lang">Voice language</label>
           <select id="lang">
-            <option value="en">English</option><option value="hi">हिन्दी Hindi</option><option value="mr">मराठी Marathi</option>
+            <option value="en" selected>English</option><option value="hi">हिन्दी Hindi</option><option value="mr">मराठी Marathi</option>
             <option value="ta">தமிழ் Tamil</option><option value="te">తెలుగు Telugu</option><option value="bn">বাংলা Bengali</option>
             <option value="gu">ગુજરાતી Gujarati</option><option value="kn">ಕನ್ನಡ Kannada</option><option value="es">Español</option>
             <option value="fr">Français</option><option value="de">Deutsch</option>
@@ -105,19 +104,9 @@
 
       <div class="duo">
         <div class="card"><span class="eyebrow">Objects</span><div class="chips" id="objects"><span class="muted">None yet</span></div></div>
-        <div class="card"><span class="eyebrow">Text found</span><p class="ocr" id="ocrText"><span class="muted">None yet</span></p></div>
+        <div class="card"><span class="eyebrow">Close-ups</span><ul class="closeups" id="closeups"><li class="muted">None yet</li></ul></div>
       </div>
 
-      <div class="card">
-        <div class="qa-list" id="qaList"></div>
-        <form class="ask" id="askForm">
-          <label for="ask" class="sr-only">Ask about this image</label>
-          <input id="ask" type="text" placeholder="How many people are in the photo?" autocomplete="off" />
-          <button type="button" class="icon-btn" id="micBtn" aria-label="Ask by voice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
-          <button type="submit" class="btn primary">Ask</button>
-        </form>
-        <p class="err" id="askErr" hidden></p>
-      </div>
     </section>
   </div>
 
@@ -137,7 +126,6 @@
 <nav class="bottom-nav" aria-label="Modes">
   <button class="bn active" data-view="describe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Describe</button>
   <button class="bn" data-view="live"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3"/></svg>Live</button>
-  <button class="bn" data-view="read"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h13"/></svg>Read text</button>
   <button class="bn" data-view="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>History</button>
 </nav>
 

@@ -1,7 +1,8 @@
-"""Vision to Voice backend.
+"""Vision2Voice web backend.
 
-image -> BLIP caption (+ BLIP VQA) + YOLOv8 objects + EasyOCR text
-      -> text_polish (rules + T5 grammar fix) -> translation -> gTTS / pyttsx3 audio
+image -> VGG16 (fc2) + LSTM beam-search caption  (the project's trained model)
+      -> YOLOv8-nano objects + captions of the largest object crops
+      -> text_polish (rules + optional T5 grammar fix) -> translation -> gTTS / pyttsx3
 Run: uvicorn app:app --host 0.0.0.0 --port 8000
 """
 from __future__ import annotations
@@ -10,75 +11,60 @@ import base64
 import io
 import os
 import tempfile
+import threading
 import time
 import uuid
 from contextlib import asynccontextmanager
-from functools import lru_cache
 from pathlib import Path
 
-import numpy as np
-import torch
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
 
-from text_polish import answer_sentence, compose
+from text_polish import compose
 
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-DTYPE = torch.float16 if DEVICE == "cuda" else torch.float32
-CAPTION_MODEL = os.getenv("CAPTION_MODEL", "Salesforce/blip-image-captioning-large")
-VQA_MODEL = os.getenv("VQA_MODEL", "Salesforce/blip-vqa-base")
-YOLO_MODEL = os.getenv("YOLO_MODEL", "yolov8n.pt")
-OCR_LANGS = os.getenv("OCR_LANGS", "en").split(",")
 MAX_IMAGE_MB = 10
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 ACCENTS = {"in": "co.in", "us": "com", "uk": "co.uk", "au": "com.au"}
+DETAIL = {"brief": {"beam_width": 3, "crops": False}, "rich": {"beam_width": 10, "crops": True}}
+
+_state: dict = {"captioner": None, "error": None}
+_lock = threading.Lock()  # Keras/YOLO models aren't thread-safe; serialise inference
+
+
+def get_captioner():
+    if _state["captioner"] is None:
+        with _lock:
+            if _state["captioner"] is None:
+                # Load YOLO (PyTorch) and run it once BEFORE TensorFlow starts; the reverse order
+                # can crash with "LLVM ERROR: inconsistency in registered CommandLine options".
+                from ultralytics import YOLO
+                yolo = YOLO(os.getenv("YOLO_MODEL", "yolov8n.pt"))
+                yolo.predict(Image.new("RGB", (64, 64)), verbose=False)
+                from captioner import Captioner
+                c = Captioner()
+                c._yolo = yolo
+                _state["captioner"] = c
+    return _state["captioner"]
+
 
 @asynccontextmanager
 async def lifespan(_app):
-    if os.getenv("PRELOAD", "1") == "1":  # load models once at startup
-        caption_model(); vqa_model(); safe(yolo_model); safe(ocr_reader)
+    if os.getenv("PRELOAD", "1") == "1":
+        try:
+            get_captioner()
+        except Exception as e:  # keep the server up so /api/health can explain the problem
+            _state["error"] = str(e)
+            print(f"[error] model load failed: {e}")
     yield
 
 
-app = FastAPI(title="Vision to Voice API", version="2.0", lifespan=lifespan)
+app = FastAPI(title="Vision2Voice API", version="2.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
-# ---------- models (lazy, cached) ----------
-def _to_device(inputs):
-    return {k: v.to(DEVICE, DTYPE) if v.dtype.is_floating_point else v.to(DEVICE) for k, v in inputs.items()}
-
-
-@lru_cache(maxsize=1)
-def caption_model():
-    from transformers import BlipForConditionalGeneration, BlipProcessor
-    return (BlipProcessor.from_pretrained(CAPTION_MODEL),
-            BlipForConditionalGeneration.from_pretrained(CAPTION_MODEL, torch_dtype=DTYPE).to(DEVICE).eval())
-
-
-@lru_cache(maxsize=1)
-def vqa_model():
-    from transformers import BlipForQuestionAnswering, BlipProcessor
-    return (BlipProcessor.from_pretrained(VQA_MODEL),
-            BlipForQuestionAnswering.from_pretrained(VQA_MODEL, torch_dtype=DTYPE).to(DEVICE).eval())
-
-
-@lru_cache(maxsize=1)
-def yolo_model():
-    from ultralytics import YOLO
-    return YOLO(YOLO_MODEL)
-
-
-@lru_cache(maxsize=1)
-def ocr_reader():
-    import easyocr
-    return easyocr.Reader(OCR_LANGS, gpu=DEVICE == "cuda", verbose=False)
-
-
-# ---------- vision steps ----------
 def load_image(data: bytes) -> Image.Image:
     if len(data) > MAX_IMAGE_MB * 1024 * 1024:
         raise HTTPException(413, f"Image is larger than {MAX_IMAGE_MB} MB.")
@@ -86,55 +72,10 @@ def load_image(data: bytes) -> Image.Image:
         img = Image.open(io.BytesIO(data)).convert("RGB")
     except Exception:
         raise HTTPException(400, "That file couldn't be read as an image.")
-    img.thumbnail((1024, 1024))
+    img.thumbnail((1280, 1280))
     return img
 
 
-@torch.inference_mode()
-def caption(img: Image.Image, rich: bool) -> str:
-    proc, model = caption_model()
-    inputs = proc(img, "a picture of", return_tensors="pt") if rich else proc(img, return_tensors="pt")
-    out = model.generate(**_to_device(inputs), max_new_tokens=50 if rich else 25, min_new_tokens=6,
-                         num_beams=5, repetition_penalty=1.4, no_repeat_ngram_size=3)
-    return proc.decode(out[0], skip_special_tokens=True)
-
-
-@torch.inference_mode()
-def vqa(img: Image.Image, question: str) -> str:
-    proc, model = vqa_model()
-    out = model.generate(**_to_device(proc(img, question, return_tensors="pt")), max_new_tokens=15)
-    return proc.decode(out[0], skip_special_tokens=True).strip()
-
-
-def detect(img: Image.Image, conf: float = 0.35) -> list[dict]:
-    res = yolo_model().predict(img, conf=conf, verbose=False, device=0 if DEVICE == "cuda" else "cpu")[0]
-    names = res.names
-    return [{"label": names[int(c)], "conf": round(float(p), 3), "box": [round(float(v), 4) for v in b]}
-            for b, c, p in zip(res.boxes.xyxyn.tolist(), res.boxes.cls.tolist(), res.boxes.conf.tolist())]
-
-
-def read_text(img: Image.Image, min_conf: float = 0.4) -> list[dict]:
-    w, h = img.size
-    items = []
-    for pts, text, p in ocr_reader().readtext(np.array(img)):
-        if p < min_conf or len(text.strip()) < 2:
-            continue
-        xs, ys = [q[0] for q in pts], [q[1] for q in pts]
-        items.append({"text": text.strip(), "conf": round(float(p), 3),
-                      "box": [round(min(xs) / w, 4), round(min(ys) / h, 4), round(max(xs) / w, 4), round(max(ys) / h, 4)]})
-    items.sort(key=lambda i: (round(i["box"][1], 1), i["box"][0]))  # reading order
-    return items
-
-
-def safe(fn, *args, default=None):
-    try:
-        return fn(*args)
-    except Exception as e:  # a missing optional model must not break the whole request
-        print(f"[warn] {fn.__name__} failed: {e}")
-        return default
-
-
-# ---------- translation + speech ----------
 def translate(text: str, lang: str) -> str:
     if lang == "en":
         return text
@@ -164,23 +105,27 @@ def synthesize(text: str, lang: str = "en", accent: str = "in", slow: bool = Fal
 
 
 def audio_payload(text: str, lang: str, accent: str, slow: bool) -> dict:
-    audio, mime = synthesize(text, lang, accent, slow)
+    try:
+        audio, mime = synthesize(text, lang, accent, slow)
+    except Exception as e:
+        print(f"[warn] speech failed: {e}")
+        return {"audio_mime": None, "audio_base64": None}
     return {"audio_mime": mime, "audio_base64": base64.b64encode(audio).decode()}
 
 
-# ---------- API ----------
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "device": DEVICE.upper(),
-            "models": {"caption": CAPTION_MODEL, "vqa": VQA_MODEL, "detector": YOLO_MODEL, "ocr": "EasyOCR"}}
+    ok = _state["captioner"] is not None
+    return {"status": "ok" if ok else ("error" if _state["error"] else "loading"), "error": _state["error"],
+            "device": "CPU", "models": {"encoder": "VGG16 (ImageNet, fc2)", "decoder": "LSTM (Flickr8k)",
+                                       "detector": os.getenv("YOLO_MODEL", "yolov8n.pt"), "tts": "gTTS"}}
 
 
 @app.post("/api/analyze")
 async def analyze(
     image: UploadFile = File(...),
-    mode: str = Form("describe"),          # describe | read | live
+    mode: str = Form("describe"),          # describe | live
     detail: str = Form("rich"),            # rich | brief
-    question: str = Form(""),
     lang: str = Form("en"),
     accent: str = Form("in"),
     slow: bool = Form(False),
@@ -189,35 +134,24 @@ async def analyze(
     if not (image.content_type or "").startswith("image/"):
         raise HTTPException(400, "Choose an image file.")
     img = load_image(await image.read())
+    try:
+        cap = get_captioner()
+    except Exception as e:
+        raise HTTPException(503, f"Models couldn't be loaded: {e}")
     t0 = time.perf_counter()
-
-    raw_caption = caption(img, rich=detail == "rich" and mode != "live")
-    objects = safe(detect, img, default=[]) if mode != "read" else []
-    ocr = safe(read_text, img, default=[]) if mode != "live" else []
-    answer = vqa(img, question) if question.strip() and mode != "live" else ""
+    opts = DETAIL["brief"] if mode == "live" else DETAIL.get(detail, DETAIL["rich"])
+    with _lock:
+        raw = cap.analyze(img, beam_width=opts["beam_width"], crops=opts["crops"])
     vision_ms = int((time.perf_counter() - t0) * 1000)
 
-    result = compose(raw_caption, [o["label"] for o in objects], [o["text"] for o in ocr],
-                     question, answer, mode)
+    result = compose(raw["caption"], [d["label"] for d in raw["detections"]], raw["crop_captions"], mode)
     spoken = translate(result["narration"], lang)
-    payload = {
-        **result, "raw_caption": raw_caption, "detections": objects, "ocr": ocr,
-        "question": question or None, "spoken_text": spoken, "lang": lang,
-        "image_size": img.size,
-    }
+    payload = {**result, "raw_caption": raw["caption"], "raw_crop_captions": raw["crop_captions"],
+               "detections": raw["detections"], "spoken_text": spoken, "lang": lang, "image_size": img.size}
     if speak:
         payload.update(audio_payload(spoken, lang, accent, slow))
     payload["timings_ms"] = {"vision": vision_ms, "total": int((time.perf_counter() - t0) * 1000)}
     return payload
-
-
-@app.post("/api/ask")
-async def ask(image: UploadFile = File(...), question: str = Form(...), lang: str = Form("en"),
-              accent: str = Form("in"), slow: bool = Form(False)):
-    img = load_image(await image.read())
-    answer = answer_sentence(question, vqa(img, question))
-    spoken = translate(answer, lang)
-    return {"question": question, "answer": answer, "spoken_text": spoken, **audio_payload(spoken, lang, accent, slow)}
 
 
 @app.post("/api/tts")

@@ -1,3 +1,4 @@
+[hidden] { display: none !important; }
 :root {
   --bg: #0B0D12; --panel: #131722; --panel-2: #0F121A; --line: #1C2030; --line-2: #262B3B;
   --text: #E7E9EE; --bright: #FFFFFF; --muted: #9AA3B5; --dim: #6F7890;
@@ -148,7 +149,9 @@ main { max-width: 1360px; margin: 0 auto; padding: 32px 40px 48px; }
   .brand-name { font-size: 18px; } .logo { width: 32px; height: 32px; }
   .status { border: 0; padding: 0; font-size: 12px; }
   main { padding: 8px 16px 120px; }
-  .stage { height: 280px; border-radius: 18px; }
+  .stage { height: auto; min-height: 240px; border-radius: 18px; display: block; }
+  .stage img, .stage video { height: auto; max-height: 460px; display: block; }
+  .stage .empty { padding: 48px 16px; }
   .stage-bar { left: 10px; right: 10px; bottom: 10px; }
   .chip-btn { height: 40px; padding: 0 12px; font-size: 13px; }
   .caption { font-size: 20px; margin-bottom: 14px; }
@@ -163,3 +166,8 @@ main { max-width: 1360px; margin: 0 auto; padding: 32px 40px 48px; }
   .toast { bottom: 96px; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+.closeups { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-direction: column; gap: 8px; }
+.closeups li { font-size: 14px; line-height: 1.45; color: #C9CEDA; }
+.closeups li:not(.muted)::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-right: 8px; vertical-align: 2px; }
+.duo { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+@media (max-width: 720px) { .duo { grid-template-columns: 1fr; } }
