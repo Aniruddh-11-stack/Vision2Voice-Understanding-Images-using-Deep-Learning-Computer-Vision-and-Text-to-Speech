@@ -1,3 +1,4 @@
 *.pkl filter=lfs diff=lfs merge=lfs -text
-*.txt filter=lfs diff=lfs merge=lfs -text
 *.h5 filter=lfs diff=lfs merge=lfs -text
+# Over GitHub's 100 MB limit, so it stays in LFS. Other .txt files are stored normally.
+data/glove.6B.50d.txt filter=lfs diff=lfs merge=lfs -text

@@ -12,7 +12,7 @@ __version__ = "1.0.0"
 __author__ = "Aniruddh Kulkarni"
 __email__ = "anikulks@gmail.com"
 
-from vision2voice.predictor import Vision2VoicePredictor
 from vision2voice.audio import TextToSpeechEngine
+from vision2voice.predictor import Vision2VoicePredictor
 
 __all__ = ["Vision2VoicePredictor", "TextToSpeechEngine"]

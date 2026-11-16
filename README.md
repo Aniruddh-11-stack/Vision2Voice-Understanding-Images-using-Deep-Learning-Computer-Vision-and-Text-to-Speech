@@ -9,6 +9,22 @@
 
 ![Vision2Voice App Demo](docs/screenshots/app_demo.png)
 
+## New: Vision2Voice web app
+
+[`webapp/`](webapp/) is a FastAPI backend and a responsive web interface (laptop and phone) for this project's trained VGG16 + LSTM model. It adds YOLOv8 object close-ups, a grammar-polishing step that turns raw LSTM output into natural sentences, live camera narration, and speech in several accents and Indian languages.
+
+![Vision2Voice web app](webapp/docs/webapp_laptop.png)
+
+*A real result from `modelConcat_1_89.h5` on `capstone_data_2/flickr8k/playing_soccer.jpg`. The raw caption "little boy in red shorts kicks soccer ball in grassy field" is spoken as "A little boy in red shorts kicks **a** soccer ball in **a** grassy field."*
+
+```bash
+git lfs pull --include="capstone_data_2/Saved_Models3/modelConcat_1_89.h5,capstone_data_2/caption_train_tokenizer.pkl"
+cd webapp/backend && pip install -r requirements.txt && uvicorn app:app --port 8000
+# open http://localhost:8000
+```
+
+See [webapp/README.md](webapp/README.md) for how the pipeline and grammar rules work, the API and configuration.
+
 ## Model Architecture
 
 The model uses a dual-input architecture combining:
@@ -25,6 +41,7 @@ The model uses a dual-input architecture combining:
 - **Ensemble Captions** — Per-crop captions combined into a coherent narration
 - **Text-to-Speech** — gTTS converts captions to spoken audio (MP3)
 - **Web Interface** — Streamlit app with real-time inference and audio playback
+- **Web App (new)** — FastAPI + responsive UI in `webapp/`: beam-search captions, YOLO close-ups, grammar polishing, live camera, multilingual speech
 - **Docker Support** — Containerised deployment with a single command
 - **CI/CD Pipeline** — GitHub Actions for linting, testing, and Docker builds
 
@@ -105,6 +122,15 @@ Vision2Voice/
 |   |       +-- __init__.py
 |   |       +-- image_utils.py  # Preprocessing helpers
 |   +-- app.py                  # Streamlit entry point
+|
++-- webapp/                     # New: FastAPI backend + responsive web UI
+|   +-- backend/
+|   |   +-- app.py              # API: /api/analyze, /api/tts, /api/health
+|   |   +-- captioner.py        # VGG16 + LSTM beam search + YOLOv8 crops
+|   |   +-- text_polish.py      # Grammar polishing of model captions
+|   |   +-- test_*.py           # pytest suite
+|   +-- frontend/               # index.html, styles.css, app.js
+|   +-- docs/                   # Screenshots
 |
 +-- tests/
 |   +-- unit/                   # Fast, dependency-free unit tests

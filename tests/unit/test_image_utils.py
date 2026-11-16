@@ -15,8 +15,10 @@ class TestValidateImagePath:
             validate_image_path(tmp_path / "nonexistent.jpg")
 
     def test_unsupported_extension_raises(self, tmp_path):
-        bad_file = tmp_path / "file.xyz"; bad_file.write_text("dummy")
-        with pytest.raises(ValueError): validate_image_path(bad_file)
+        bad_file = tmp_path / "file.xyz"
+        bad_file.write_text("dummy")
+        with pytest.raises(ValueError):
+            validate_image_path(bad_file)
 
 
 class TestLoadImageRgb:
@@ -25,7 +27,8 @@ class TestLoadImageRgb:
         assert isinstance(img, np.ndarray) and img.shape[2] == 3
 
     def test_invalid_path_raises(self, tmp_path):
-        with pytest.raises(FileNotFoundError): load_image_rgb(tmp_path / "ghost.jpg")
+        with pytest.raises(FileNotFoundError):
+            load_image_rgb(tmp_path / "ghost.jpg")
 
 
 class TestResizeAndPad:
