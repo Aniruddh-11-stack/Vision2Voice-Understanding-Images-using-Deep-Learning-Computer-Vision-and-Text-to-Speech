@@ -292,7 +292,7 @@ def compose(caption_raw: str, labels: list[str], crop_captions: list | None = No
     # Flickr8k captions are sentences on their own ("a dog runs through the grass")
     parts = [sentence(caption)]
     told = " ".join([caption] + closeups[:max_closeups])
-    extras = [count_phrase(l, n) for l, n in counts.most_common() if not mentioned(l, told)][:5]
+    extras = [count_phrase(lbl, n) for lbl, n in counts.most_common() if not mentioned(lbl, told)][:5]
     if extras:
         parts.append(sentence(f"I can also see {join_list(extras)}"))
     if mode != "live":
@@ -300,7 +300,7 @@ def compose(caption_raw: str, labels: list[str], crop_captions: list | None = No
 
     return {
         "caption": sentence(caption),
-        "objects": [{"label": l, "count": n, "phrase": count_phrase(l, n)} for l, n in counts.most_common()],
+        "objects": [{"label": lbl, "count": n, "phrase": count_phrase(lbl, n)} for lbl, n in counts.most_common()],
         "closeups": [sentence(c) for c in closeups[:max_closeups]],
         "narration": " ".join(p for p in parts if p),
     }
