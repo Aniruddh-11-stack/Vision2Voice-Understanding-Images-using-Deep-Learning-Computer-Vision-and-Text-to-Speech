@@ -19,6 +19,8 @@ import numpy as np
 from PIL import Image
 from ultralytics import YOLO
 
+from vision2voice.text_polish import compose
+
 # Keras is imported lazily (see _import_keras): YOLO/PyTorch must run once BEFORE TensorFlow is
 # imported, otherwise the process can abort with "LLVM ERROR: inconsistency in registered
 # CommandLine options". The names exist at module level so tests can patch them.
@@ -205,17 +207,31 @@ class Vision2VoicePredictor:
         return self.beam_search(self._extract_feature(np_img))[0][0]
 
     def analyze_full_image(self, image_path: str) -> Tuple[str, str]:
-        """Returns (caption of the whole image, whole caption + captions of each detected object)."""
+        """Returns (polished caption of the whole image, spoken narration).
+
+        The narration is the whole-image caption, the objects YOLO found that it
+        doesn't mention, and up to two captions of object crops, all cleaned up
+        by text_polish (articles, repeats, punctuation). A crop caption is kept
+        only if it mentions that crop's YOLO label and isn't a near-repeat.
+        """
         if not self.ready:
             raise ModelNotReadyError("Model weights not found.")
         base_img = cv2.cvtColor(cv2.imread(image_path), cv2.COLOR_BGR2RGB)
         base_cap = self.generate_best_caption(base_img)
         results = self.yolo.predict(image_path, verbose=False)
-        crops: List[str] = []
+        names = getattr(results[0], "names", {}) or {}
+        labels: List[str] = []
+        crops: List[dict] = []
         pil_image = Image.open(image_path).convert("RGB")
         for box in results[0].boxes:
+            label = names.get(int(box.cls[0]), "object") if hasattr(box, "cls") else "object"
+            labels.append(label)
             x1, y1, x2, y2 = [round(v) for v in box.xyxy[0].tolist()]
             if x2 - x1 < 32 or y2 - y1 < 32:  # tiny crops give meaningless captions
                 continue
-            crops.append(self.generate_best_caption(np.array(pil_image.crop((x1, y1, x2, y2)))))
-        return base_cap, " ".join([base_cap] + crops)
+            text, score = self.beam_search(
+                self._extract_feature(np.array(pil_image.crop((x1, y1, x2, y2))))
+            )[0]
+            crops.append({"label": label, "caption": text, "score": score})
+        result = compose(base_cap, labels, crops)
+        return result["caption"], result["narration"]

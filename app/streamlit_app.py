@@ -57,7 +57,10 @@ tts_engine = load_tts()
 
 with st.sidebar:
     st.title("Settings")
-    st.success("✅ Models Ready") if predictor.ready else st.error("⚠️ Weights Missing!")
+    if predictor.ready:
+        st.success("✅ Models Ready")
+    else:
+        st.error("⚠️ Weights Missing!")
 
 col_upload, col_results = st.columns([1, 1], gap="large")
 with col_upload:
