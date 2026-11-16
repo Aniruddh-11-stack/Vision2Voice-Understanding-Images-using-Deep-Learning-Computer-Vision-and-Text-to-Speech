@@ -7,15 +7,13 @@
 [![Python](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11-blue.svg)](https://www.python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-![Vision2Voice App Demo](docs/screenshots/app_demo.png)
+![Vision2Voice web app](webapp/docs/webapp_laptop.png)
+
+*A real result from `modelConcat_1_89.h5` on `capstone_data_2/flickr8k/playing_soccer.jpg`. The raw caption "little boy in red shorts kicks soccer ball in grassy field" is spoken as "A little boy in red shorts kicks **a** soccer ball in **a** grassy field."*
 
 ## New: Vision2Voice web app
 
 [`webapp/`](webapp/) is a FastAPI backend and a responsive web interface (laptop and phone) for this project's trained VGG16 + LSTM model. It adds YOLOv8 object close-ups, a grammar-polishing step that turns raw LSTM output into natural sentences, live camera narration, and speech in several accents and Indian languages.
-
-![Vision2Voice web app](webapp/docs/webapp_laptop.png)
-
-*A real result from `modelConcat_1_89.h5` on `capstone_data_2/flickr8k/playing_soccer.jpg`. The raw caption "little boy in red shorts kicks soccer ball in grassy field" is spoken as "A little boy in red shorts kicks **a** soccer ball in **a** grassy field."*
 
 ```bash
 git lfs pull --include="capstone_data_2/Saved_Models3/modelConcat_1_89.h5,capstone_data_2/caption_train_tokenizer.pkl"
@@ -141,8 +139,6 @@ Vision2Voice/
 |       +-- test_pipeline.py
 |
 +-- docs/
-|   +-- screenshots/
-|   |   +-- app_demo.png
 |   +-- model_architecture.png
 |   +-- dataset.md
 |
