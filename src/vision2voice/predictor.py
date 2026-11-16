@@ -29,27 +29,34 @@ def _import_keras() -> None:
     global VGG16, preprocess_input, Model, load_model
     if VGG16 is None:
         from keras.applications.vgg16 import VGG16 as _vgg
+
         VGG16 = _vgg
     if preprocess_input is None:
         from keras.applications.vgg16 import preprocess_input as _pp
+
         preprocess_input = _pp
     if Model is None:
         from keras.models import Model as _model
+
         Model = _model
     if load_model is None:
         from keras.models import load_model as _lm
+
         load_model = _lm
+
 
 logger = logging.getLogger(__name__)
 
 
 class ModelNotReadyError(RuntimeError):
     """Raised when model weights are not found in the expected directory."""
+
     pass
 
 
 class _TokenizerState:
     """Attributes of a pickled Keras 2 Tokenizer, readable without Keras 2."""
+
     def __setstate__(self, state):
         self.__dict__.update(state if isinstance(state, dict) else {})
 
@@ -67,7 +74,7 @@ def _pad(seqs: List[List[int]], maxlen: int) -> np.ndarray:
     for i, s in enumerate(seqs):
         s = s[-maxlen:]
         if s:
-            out[i, maxlen - len(s):] = s
+            out[i, maxlen - len(s) :] = s
     return out
 
 
@@ -92,7 +99,9 @@ class Vision2VoicePredictor:
         _import_keras()
         logger.info("Initializing VGG16 feature extractor...")
         base_model = VGG16(include_top=True)
-        self.feature_extractor: Model = Model(inputs=base_model.input, outputs=base_model.get_layer("fc2").output)
+        self.feature_extractor: Model = Model(
+            inputs=base_model.input, outputs=base_model.get_layer("fc2").output
+        )
         self._load_weights()
 
     # ------------------------------------------------------------------ loading
@@ -106,7 +115,11 @@ class Vision2VoicePredictor:
             tok = _TokenizerUnpickler(fh).load()
         self.word_index = tok.word_index
         self.index_word = {int(k): v for k, v in tok.index_word.items()}
-        self._filters = re.compile("[" + re.escape(getattr(tok, "filters", "")) + "]") if getattr(tok, "filters", "") else None
+        self._filters = (
+            re.compile("[" + re.escape(getattr(tok, "filters", "")) + "]")
+            if getattr(tok, "filters", "")
+            else None
+        )
         self.start_id = self.word_index["start"]
         self.end_id = self.word_index["end"]
         self.model = self._load_decoder(m)
@@ -117,24 +130,30 @@ class Vision2VoicePredictor:
             return load_model(path, compile=False)
         except Exception:  # Keras 3 can't read this Keras 2 file directly
             logger.info("Rebuilding decoder architecture to load Keras 2 weights")
+            import h5py
             from keras import Input
             from keras.layers import LSTM, Dense, Dropout, Embedding, concatenate
-            import h5py
+
             i1 = Input(shape=(4096,))
             a = Dense(256, activation="relu")(Dropout(0.5)(i1))
             i2 = Input(shape=(self.max_length,))
             b = LSTM(256)(Dropout(0.5)(Embedding(self.vocab_size, 50, trainable=False)(i2)))
-            out = Dense(self.vocab_size, activation="softmax")(Dense(256, activation="relu")(concatenate([a, b])))
+            out = Dense(self.vocab_size, activation="softmax")(
+                Dense(256, activation="relu")(concatenate([a, b]))
+            )
             model = Model([i1, i2], out)
             with h5py.File(path, "r") as f:
                 g = f["model_weights"] if "model_weights" in f else f
                 saved = []
                 for n in g.attrs["layer_names"]:
                     n = n.decode() if isinstance(n, bytes) else n
-                    ws = [np.array(g[n][w.decode() if isinstance(w, bytes) else w]) for w in g[n].attrs["weight_names"]]
+                    ws = [
+                        np.array(g[n][w.decode() if isinstance(w, bytes) else w])
+                        for w in g[n].attrs["weight_names"]
+                    ]
                     if ws:
                         saved.append(ws)
-            for layer in [l for l in model.layers if l.weights]:
+            for layer in [lyr for lyr in model.layers if lyr.weights]:
                 shapes = [tuple(w.shape) for w in layer.get_weights()]
                 k = next(i for i, ws in enumerate(saved) if [tuple(w.shape) for w in ws] == shapes)
                 layer.set_weights(saved.pop(k))
@@ -160,18 +179,24 @@ class Vision2VoicePredictor:
             if not live:
                 break
             probs = self.model.predict(
-                [np.repeat(photo, len(live), axis=0), _pad([b[0] for b in live], self.max_length)], verbose=0)
+                [np.repeat(photo, len(live), axis=0), _pad([b[0] for b in live], self.max_length)],
+                verbose=0,
+            )
             candidates = [b for b in beams if b[2]]
             for (seq, logp, _), p in zip(live, probs):
                 for idx in np.argsort(p)[-k:]:
                     idx = int(idx)
                     if idx == 0:
                         continue
-                    candidates.append((seq + [idx], logp + float(np.log(p[idx] + 1e-12)), idx == self.end_id))
+                    candidates.append(
+                        (seq + [idx], logp + float(np.log(p[idx] + 1e-12)), idx == self.end_id)
+                    )
             beams = sorted(candidates, key=lambda b: b[1] / len(b[0]), reverse=True)[:k]
         results = []
         for seq, logp, _ in sorted(beams, key=lambda b: b[1] / len(b[0]), reverse=True):
-            words = [self.index_word.get(i, "") for i in seq[1:] if i not in (self.start_id, self.end_id)]
+            words = [
+                self.index_word.get(i, "") for i in seq[1:] if i not in (self.start_id, self.end_id)
+            ]
             results.append((" ".join(w for w in words if w), logp / len(seq)))
         return results
 

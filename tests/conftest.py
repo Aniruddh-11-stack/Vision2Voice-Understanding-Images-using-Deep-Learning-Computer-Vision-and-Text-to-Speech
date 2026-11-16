@@ -2,7 +2,6 @@
 Pytest configuration and shared fixtures for Vision2Voice tests.
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -22,6 +21,7 @@ def sample_rgb_image():
 @pytest.fixture
 def sample_image_path(tmp_path, sample_rgb_image):
     from PIL import Image
+
     img = Image.fromarray(sample_rgb_image)
     path = tmp_path / "test_image.jpg"
     img.save(str(path))
